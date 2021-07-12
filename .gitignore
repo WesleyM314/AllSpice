@@ -50,3 +50,15 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+.cproject
+
+.mxproject
+
+.project
+
+.settings/
+
+Debug/
+
+Drivers/

@@ -95,14 +95,16 @@ void Servo45to0(int motor_id) {
 
 // Turns to spice container specified
 void TurnToSpice(int container_number, int degree_direction[]) {
-	int degrees = 45*(container_number + 1);	//finds amount of degrees needed to turn to spice container
+	int degrees;	//finds amount of degrees needed to turn to spice container
 	int direction = 0; //counterclockwise is 0, clockwise is 1
 
 	// turn right if spice container 0, 1, 2, or 3
 	if( container_number <= 3) {
+		degrees  = 45*(container_number + 1);
 		StepCounterTurnDegree(degrees);
 	}
 	else {
+		degrees = 45 * (7 - container_number);
 		StepClockTurnDegree(degrees);
 		direction = 1;
 	}

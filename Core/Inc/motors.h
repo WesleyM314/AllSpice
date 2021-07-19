@@ -9,6 +9,7 @@
 #define INC_MOTORS_H_
 
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim3;
 
 // Function prototypes
 // Stepper motors

@@ -8,6 +8,7 @@
 #include "bluetooth.h"
 #include "spices.h"
 #include "flash.h"
+#include "motors.h"
 
 //spice_t spice_list[NUMCONTAINERS];
 char buffer[50];
@@ -20,6 +21,7 @@ uint8_t REGISTER = 0x02;
 uint8_t DELETE = 0x03;
 uint8_t REFILL = 0x04;
 uint8_t DISPENSE_SERIES = 0x05;
+uint8_t RESET_ALL_SPICES = 0x06;
 
 /**
  * BASIC COMMAND STRUCTURES
@@ -64,8 +66,8 @@ void message_handler() {
 	// Dispense
 	int d;
 	case 0x01:
-		// Call Noah's function to rotate to <buffer[1]>
-		// Call Noah's function to dispense <buffer[2]> units
+		// Call to Noah's dispense function
+		DispenseSpice(buffer[1], buffer[2]);
 		// Update amount dispensed
 		d = dispenseSpice(spice_list, buffer[1], buffer[2]);
 		// TODO send notification if spice low
@@ -112,13 +114,19 @@ void message_handler() {
 			int c = buffer[2 + 2 * i];
 			int a = buffer[3 + 2 * i];
 
-			// Call Noah's function to rotate to <c>
-			// Call Noah's function to dispense <a> units
+			// Call to Noah's dispense function
+			DispenseSpice(c, a);
 			// Update amount dispensed
 			d = dispenseSpice(spice_list, c, a);
 			HAL_Delay(0);
 			// TODO send notification if spice low
 		}
+		flash_write();
+		break;
+
+		// Reset all spices
+	case 0x06:
+		initList(spice_list);
 		flash_write();
 		break;
 	}

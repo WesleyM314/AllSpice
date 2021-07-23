@@ -124,59 +124,34 @@ void SpiceServoControl(int duty) {
 	htim1.Instance->CCR1 = duty;
 }
 
-// Rotates servo from 0 to 45 degrees incrementally
-void SpiceServo0to45(int motor_id) {
-	for( int duty = 25; duty < 50; duty++) {
-		if( motor_id == 0) {
-			htim1.Instance->CCR1 = duty;
-		}
-		else if( motor_id == 1) {
-			htim1.Instance->CCR1 = duty; //TODO: make second servo motor configuration
-		}
-		HAL_Delay(100);
-	}
-}
-
-// Rotates servo from 45 to 0 degrees incrementally
-void SpiceServo45to0(int motor_id) {
-	for( int duty = 50; duty < 25; duty--) {
-		if( motor_id == 0) {
-			htim1.Instance->CCR1 = duty;
-		}
-		else if( motor_id == 1) {
-			htim1.Instance->CCR1 = duty; //TODO: make second servo motor configuration
-		}
-		HAL_Delay(100);
-	}
-}
 
 void PCServoControl(int duty) {
 	htim3.Instance->CCR1 = duty;
 }
 
 // Rotates servo from 0 to 45 degrees incrementally
-void PCServo0to45(int motor_id) {
+void Servo0to45(int motor_id) {
 	for( int duty = 25; duty < 50; duty++) {
 		if( motor_id == 0) {
-			htim3.Instance->CCR1 = duty;
+			htim1.Instance->CCR1 = duty;
 		}
 		else if( motor_id == 1) {
 			htim3.Instance->CCR1 = duty; //TODO: make second servo motor configuration
 		}
-		HAL_Delay(100);
+		HAL_Delay(50);
 	}
 }
 
 // Rotates servo from 45 to 0 degrees incrementally
-void PCServo45to0(int motor_id) {
-	for( int duty = 50; duty < 25; duty--) {
+void Servo45to0(int motor_id) {
+	for( int duty = 50; duty > 25; duty--) {
 		if( motor_id == 0) {
-			htim3.Instance->CCR1 = duty;
+			htim1.Instance->CCR1 = duty;
 		}
 		else if( motor_id == 1) {
 			htim3.Instance->CCR1 = duty; //TODO: make second servo motor configuration
 		}
-		HAL_Delay(100);
+		HAL_Delay(50);
 	}
 }
 
@@ -214,14 +189,14 @@ void TurnBack(int degree_direction[]) {
 void Dispense(int cycles) {
 	for( int i=0; i < cycles; i++) {
 		// Opens and closes the spice door
-		SpiceServo0to45(0);
+		Servo0to45(0);
 		HAL_Delay(500);
-		SpiceServo45to0(0);
+		Servo45to0(0);
 
 		// Opens and closes the portioning container door
-		PCServo0to45(1);
+		Servo0to45(1);
 		HAL_Delay(500);
-		PCServo45to0(1);
+		Servo45to0(1);
 
 	}
 }
@@ -282,9 +257,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+	Servo0to45(0);
+	HAL_Delay(500);
+	Servo0to45(1);
+	HAL_Delay(500);
 
-    /* USER CODE BEGIN 3 */
+	Servo45to0(0);
+	HAL_Delay(500);
+	Servo45to0(1);
+	HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }

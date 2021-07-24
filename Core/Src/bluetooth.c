@@ -14,14 +14,17 @@
 char buffer[50];
 char pref[] = "YOU SENT: ";
 uint8_t timer_count = 0, buffer_index = 0;
+char low_spices[9];
+uint8_t low_spice_index = 1;
 
 // Bluetooth command bytes
-uint8_t DISPENSE = 0x01;
-uint8_t REGISTER = 0x02;
-uint8_t DELETE = 0x03;
-uint8_t REFILL = 0x04;
-uint8_t DISPENSE_SERIES = 0x05;
-uint8_t RESET_ALL_SPICES = 0x06;
+//uint8_t DISPENSE = 0x01;
+//uint8_t REGISTER = 0x02;
+//uint8_t DELETE = 0x03;
+//uint8_t REFILL = 0x04;
+//uint8_t DISPENSE_SERIES = 0x05;
+//uint8_t DELETE_ALL = 0x06;
+//uint8_t LOW_SPICE = 0x07;
 
 /**
  * BASIC COMMAND STRUCTURES
@@ -61,20 +64,30 @@ void message_handler() {
 
 	char * done_str = "DONE\r\n";
 
+	// Reset low spices
+	memset(low_spices, 0xFF, sizeof(low_spices));
+	low_spices[0] = LOW_SPICE;
+	low_spice_index = 1;
+
 	// Switch case for bluetooth commands
 	switch (buffer[0]) {
 	// Dispense
 	int d;
-	case 0x01:
+	case DISPENSE:
 		// Call to Noah's dispense function
 		DispenseSpice(buffer[1], buffer[2]);
 		// Update amount dispensed
 		d = dispenseSpice(spice_list, buffer[1], buffer[2]);
-		// TODO send notification if spice low
+		// TODO test low spice notification
+		if(d > LOW_SPICE_THRESHOLD) {
+			low_spices[low_spice_index] = buffer[1];
+			low_spice_index += 1;
+		}
+
 		break;
 
 		// Register - assumes container is free
-	case 0x02:
+	case REGISTER:
 		// Make sure 25th character is 0x00
 		buffer[26] = 0x00;
 		strcpy(str, &buffer[2]);
@@ -88,7 +101,7 @@ void message_handler() {
 		break;
 
 		// Delete
-	case 0x03:
+	case DELETE:
 		if (!removeSpice(spice_list, buffer[1])) {
 			// TODO add error message
 			break;
@@ -98,7 +111,7 @@ void message_handler() {
 		break;
 
 		// Refill
-	case 0x04:
+	case REFILL:
 		if (!refillSpice(spice_list, buffer[1])) {
 			// TODO error message
 			break;
@@ -109,7 +122,7 @@ void message_handler() {
 		break;
 
 		// Dispense series
-	case 0x05:
+	case DISPENSE_SERIES:
 		for (int i = 0; i < buffer[1]; i++) {
 			int c = buffer[2 + 2 * i];
 			int a = buffer[3 + 2 * i];
@@ -119,16 +132,28 @@ void message_handler() {
 			// Update amount dispensed
 			d = dispenseSpice(spice_list, c, a);
 			HAL_Delay(0);
-			// TODO send notification if spice low
+			// TODO test low spice notification
+			if(d > LOW_SPICE_THRESHOLD) {
+				low_spices[low_spice_index] = buffer[1];
+				low_spice_index += 1;
+			}
 		}
 		flash_write();
 		break;
 
 		// Reset all spices
-	case 0x06:
+	case DELETE_ALL:
 		initList(spice_list);
 		flash_write();
 		break;
+	}
+
+	// Send low spice array
+	// TODO test low spice notification
+	if(low_spices[1] != 0xFF) {
+		low_spices[low_spice_index] = '\n';
+		HAL_Delay(250);
+		HAL_UART_Transmit(&huart2, (uint8_t*)low_spices, sizeof(low_spices), 500);
 	}
 
 	memset(buffer, 0, sizeof(buffer));

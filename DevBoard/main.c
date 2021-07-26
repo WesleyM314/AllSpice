@@ -72,7 +72,7 @@ void StepCounterTurn(void) {
 	GPIOA->ODR &= ~0x08;	  //sets pin PA3 so motor moves counterclockwise
 	GPIOC->ODR |= 0x01;	  //starts a pulse to the PC0 step pin so the motor will turn
 	GPIOC->ODR &= ~0x01;	//ends pulse
-	HAL_Delay(10);	//wait is in ms
+	HAL_Delay(20);	//wait is in ms
 }
 
 // Moves motor counterclockwise 360 degrees
@@ -95,7 +95,7 @@ void StepClockTurn(void) {
 	GPIOA->ODR |= 0x08;	  //sets pin PA3 so motor moves clockwise
 	GPIOC->ODR |= 0x01;	  //starts a pulse to the PC0 step pin so the motor will turn
 	GPIOC->ODR &= ~0x01;	//ends pulse
-	HAL_Delay(10);	//wait is in ms
+	HAL_Delay(20);	//wait is in ms
 }
 
 // Moves motor clockwise 360 degrees
@@ -129,33 +129,40 @@ void PCServoControl(int duty) {
 	htim3.Instance->CCR1 = duty;
 }
 
-// Rotates servo from 0 to 45 degrees incrementally
-void Servo0to45(int motor_id) {
-	for( int duty = 25; duty < 50; duty++) {
-		if( motor_id == 0) {
-			htim1.Instance->CCR1 = duty;
-		}
-		else if( motor_id == 1) {
-			htim3.Instance->CCR1 = duty; //TODO: make second servo motor configuration
-		}
+// Rotates PC Servo to open PC door
+void PCDoorOpen() {
+	for( int duty = 115; duty > 105; duty--) {
+		htim3.Instance->CCR1 = duty;
 		HAL_Delay(50);
 	}
 }
 
-// Rotates servo from 45 to 0 degrees incrementally
-void Servo45to0(int motor_id) {
-	for( int duty = 50; duty > 25; duty--) {
-		if( motor_id == 0) {
-			htim1.Instance->CCR1 = duty;
-		}
-		else if( motor_id == 1) {
-			htim3.Instance->CCR1 = duty; //TODO: make second servo motor configuration
-		}
+// Rotates PC Servo to close PC door
+void PCDoorClose() {
+	for( int duty = 105; duty < 115; duty++) {
+		htim3.Instance->CCR1 = duty;
+		HAL_Delay(50);
+	}
+}
+
+// Rotates Spice Servo to open spice door
+void SpiceDoorOpen() {
+	for( int duty = 35; duty > 25; duty--) {
+		htim1.Instance->CCR1 = duty;
+		HAL_Delay(50);
+	}
+}
+
+// Rotates Spice Servo to close spice door
+void SpiceDoorClose() {
+	for( int duty = 25; duty < 35; duty++) {
+		htim1.Instance->CCR1 = duty;
 		HAL_Delay(50);
 	}
 }
 
 // Turns to spice container specified
+// container number is 0 indexed
 void TurnToSpice(int container_number, int degree_direction[]) {
 	int degrees = 45*(container_number + 1);	//finds amount of degrees needed to turn to spice container
 	int direction = 0; //counterclockwise is 0, clockwise is 1
@@ -189,14 +196,16 @@ void TurnBack(int degree_direction[]) {
 void Dispense(int cycles) {
 	for( int i=0; i < cycles; i++) {
 		// Opens and closes the spice door
-		Servo0to45(0);
+		SpiceDoorOpen();
 		HAL_Delay(500);
-		Servo45to0(0);
+		SpiceDoorClose();
+		HAL_Delay(500);
 
 		// Opens and closes the portioning container door
-		Servo0to45(1);
+		PCDoorOpen();
 		HAL_Delay(500);
-		Servo45to0(1);
+		PCDoorClose();
+		HAL_Delay(500);
 
 	}
 }
@@ -209,7 +218,7 @@ void Dispense(int cycles) {
 void DispenseSpice(int container_number, int cycles) {
 	int degree_direction[2];
 
-	TurnToSpice(container_number, degree_direction); //rotates to user-specified spice
+	TurnToSpice(container_number, degree_direction); //rotates to user-specified spice (container_number is 0 indexed)
 
 	Dispense(cycles);
 
@@ -257,15 +266,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	Servo0to45(0);
-	HAL_Delay(500);
-	Servo0to45(1);
-	HAL_Delay(500);
 
-	Servo45to0(0);
-	HAL_Delay(500);
-	Servo45to0(1);
-	HAL_Delay(500);
+	DispenseSpice(1, 2);
+	HAL_Delay(1000);
+
   }
   /* USER CODE END 3 */
 }

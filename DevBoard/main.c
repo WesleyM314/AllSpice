@@ -131,7 +131,7 @@ void PCServoControl(int duty) {
 
 // Rotates PC Servo to open PC door
 void PCDoorOpen() {
-	for( int duty = 115; duty > 105; duty--) {
+	for( int duty = 116; duty > 105; duty--) {
 		htim3.Instance->CCR1 = duty;
 		HAL_Delay(50);
 	}
@@ -139,7 +139,7 @@ void PCDoorOpen() {
 
 // Rotates PC Servo to close PC door
 void PCDoorClose() {
-	for( int duty = 105; duty < 115; duty++) {
+	for( int duty = 105; duty < 116; duty++) {
 		htim3.Instance->CCR1 = duty;
 		HAL_Delay(50);
 	}
